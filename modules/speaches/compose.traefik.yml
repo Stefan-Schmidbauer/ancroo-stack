@@ -1,0 +1,8 @@
+services:
+  speaches:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.speaches.rule=Host(`${SPEACHES_DOMAIN}`)"
+      - "traefik.http.routers.speaches.entrypoints=websecure"
+      - "traefik.http.routers.speaches.tls=true"
+      - "traefik.http.services.speaches.loadbalancer.server.port=8000"

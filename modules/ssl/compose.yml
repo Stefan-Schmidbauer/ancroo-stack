@@ -1,0 +1,81 @@
+services:
+  # ── Traefik Reverse Proxy ────────────────────────────────
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - TZ=${TZ}
+    command:
+      # API & Dashboard
+      - --api.dashboard=true
+      - --api.insecure=false
+      # Docker Provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=ai-network
+      # File Provider (TLS-Zertifikate)
+      - --providers.file.filename=/certs/tls.yml
+      - --providers.file.watch=true
+      # Entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # HTTP → HTTPS Redirect
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # Logging
+      - --log.level=INFO
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/traefik/letsencrypt:/letsencrypt
+      - ./data/traefik/certs:/certs
+    networks:
+      - ai-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  # ── acme.sh Certificate Manager ─────────────────────────
+  acme:
+    image: neilpang/acme.sh:3.1.1
+    container_name: acme
+    restart: unless-stopped
+    command: daemon
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./data/traefik/certs:/certs
+      - ./data/acme:/acme.sh
+    networks:
+      - ai-network
+
+  # ── Traefik-Labels fuer Base-Services (Compose Merge) ───
+  open-webui:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.open-webui.rule=Host(`${OPENWEBUI_DOMAIN}`)"
+      - "traefik.http.routers.open-webui.entrypoints=websecure"
+      - "traefik.http.routers.open-webui.tls=true"
+      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
+
+  homepage:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`${HOMEPAGE_DOMAIN}`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls=true"
+      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+
+  ollama:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ollama.rule=Host(`${OLLAMA_DOMAIN}`)"
+      - "traefik.http.routers.ollama.entrypoints=websecure"
+      - "traefik.http.routers.ollama.tls=true"
+      - "traefik.http.services.ollama.loadbalancer.server.port=11434"

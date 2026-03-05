@@ -1,0 +1,4 @@
+services:
+  speaches:
+    labels:
+      - "traefik.http.routers.speaches.middlewares=keycloak-forward-auth"

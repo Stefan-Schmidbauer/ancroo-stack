@@ -1,0 +1,44 @@
+# Environment (contains generated passwords)
+.env
+.env.*
+!.env.example
+
+# Persistent data
+data/
+
+# Logs (contains passwords in install summary)
+logs/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Runtime files
+.module.lock
+
+# Downloaded certificates (fetched by ssl/post-enable.sh at runtime)
+modules/ssl/certs/
+
+# External module symlinks (ancroo is a separate project)
+modules/ancroo
+
+# Internal documentation (architecture, testing, roadmap)
+internal/
+
+# Claude Code
+.claude/
+
+# Private keys / certificates
+*.key
+*.pem
+*.p12
+*.pfx
+id_ed25519
+id_rsa
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store

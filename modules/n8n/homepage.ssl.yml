@@ -1,0 +1,9 @@
+# n8n Dashboard Widget — SSL mode
+- Automation:
+    - n8n:
+        icon: mdi-sitemap
+        href: https://${N8N_DOMAIN}
+        description: Open-Source Workflow Automation
+        siteMonitor: http://n8n:5678
+        server: local
+        container: n8n

@@ -1,0 +1,8 @@
+- Speech:
+    - Whisper ROCm:
+        icon: mdi-microphone
+        href: http://${HOST_IP}:${WHISPER_ROCM_PORT}/docs
+        description: Speech-to-Text (AMD ROCm GPU)
+        siteMonitor: http://whisper-rocm:8000/health
+        server: local
+        container: whisper-rocm

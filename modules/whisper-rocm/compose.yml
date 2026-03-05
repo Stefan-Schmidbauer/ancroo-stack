@@ -1,0 +1,35 @@
+services:
+  whisper-rocm:
+    build:
+      context: ./modules/whisper-rocm/build
+      dockerfile: Dockerfile
+    container_name: whisper-rocm
+    ipc: host
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION:-}
+      - WHISPER_MODEL=${WHISPER_ROCM_MODEL:-openai/whisper-large-v3-turbo}
+    group_add:
+      - video
+      - render
+      - kvm
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - ./data/whisper-rocm:/home/ubuntu/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    networks:
+      - ai-network

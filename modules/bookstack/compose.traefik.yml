@@ -1,0 +1,8 @@
+services:
+  bookstack:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookstack.rule=Host(`${BOOKSTACK_DOMAIN}`)"
+      - "traefik.http.routers.bookstack.entrypoints=websecure"
+      - "traefik.http.routers.bookstack.tls=true"
+      - "traefik.http.services.bookstack.loadbalancer.server.port=80"

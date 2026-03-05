@@ -1,0 +1,50 @@
+services:
+  # ── Keycloak — SSO & Identity Provider ───────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: keycloak
+    restart: unless-stopped
+    command: start --hostname-strict=false --proxy-headers=xforwarded --http-enabled=true
+    environment:
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/${KEYCLOAK_DB:-ancroo_keycloak}
+      - KC_DB_USERNAME=${POSTGRES_USER:-ancroo}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN:-admin}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_HOSTNAME=https://${KEYCLOAK_DOMAIN}
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=false
+      - KC_PROXY=edge
+      - TZ=${TZ}
+    networks:
+      - ai-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ── oauth2-proxy — Forward Auth fuer Proxy-Module ────
+  # Authentifiziert User via Keycloak OIDC und stellt
+  # ForwardAuth-Endpoint fuer Traefik bereit.
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.14.2
+    container_name: oauth2-proxy
+    restart: unless-stopped
+    command:
+      - --config=/etc/oauth2-proxy/oauth2-proxy.cfg
+    volumes:
+      - ./data/keycloak/oauth2-proxy.cfg:/etc/oauth2-proxy/oauth2-proxy.cfg:ro
+    extra_hosts:
+      - "${KEYCLOAK_DOMAIN}:host-gateway"
+    networks:
+      - ai-network
+    depends_on:
+      keycloak:
+        condition: service_healthy

@@ -1,0 +1,10 @@
+services:
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

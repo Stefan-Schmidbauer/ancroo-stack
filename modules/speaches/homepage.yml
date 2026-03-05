@@ -1,0 +1,9 @@
+# Speaches Dashboard Widget
+- Speech:
+    - Speaches:
+        icon: mdi-microphone
+        href: http://${HOST_IP}:${SPEACHES_PORT}
+        description: Speech-to-Text Service (Whisper)
+        siteMonitor: http://speaches:8000
+        server: local
+        container: speaches

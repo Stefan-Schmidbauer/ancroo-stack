@@ -1,0 +1,15 @@
+services:
+  valkey:
+    image: valkey/valkey:alpine
+    container_name: valkey
+    restart: unless-stopped
+    command: --save 60 1 --loglevel warning
+    volumes:
+      - ./data/valkey:/data
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

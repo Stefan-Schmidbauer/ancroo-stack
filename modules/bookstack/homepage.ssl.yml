@@ -1,0 +1,9 @@
+# BookStack Dashboard Widget — SSL mode
+- Knowledge:
+    - BookStack:
+        icon: mdi-book-open-page-variant
+        href: https://${BOOKSTACK_DOMAIN}
+        description: Knowledge Base / Wiki
+        siteMonitor: http://bookstack:80/status
+        server: local
+        container: bookstack

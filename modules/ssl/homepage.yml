@@ -1,0 +1,8 @@
+# SSL/Traefik Dashboard Widget
+- Administration:
+    - Traefik:
+        icon: sh-traefik
+        href: https://${TRAEFIK_DOMAIN}
+        description: Reverse Proxy & SSL
+        server: local
+        container: traefik

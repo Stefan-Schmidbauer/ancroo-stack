@@ -1,0 +1,22 @@
+services:
+  service-tools:
+    build:
+      context: ./modules/service-tools/build
+      dockerfile: Dockerfile
+    container_name: service-tools
+    restart: unless-stopped
+    environment:
+      - WHISPER_BASE_URL=http://speaches:8000
+      - TZ=${TZ}
+    volumes:
+      - ./data/service-tools:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ai-network
+    depends_on:
+      - speaches

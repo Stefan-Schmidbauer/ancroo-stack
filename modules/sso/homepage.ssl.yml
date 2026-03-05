@@ -1,0 +1,9 @@
+# Keycloak Dashboard Widget — SSL mode
+- Administration:
+    - Keycloak:
+        icon: sh-keycloak
+        href: https://${KEYCLOAK_DOMAIN}
+        description: Identity & Access Management
+        siteMonitor: http://keycloak:9000/health/ready
+        server: local
+        container: keycloak

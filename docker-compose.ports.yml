@@ -1,0 +1,10 @@
+services:
+  ollama:
+    ports:
+      - "11434:11434"
+  open-webui:
+    ports:
+      - "8080:8080"
+  homepage:
+    ports:
+      - "80:3000"

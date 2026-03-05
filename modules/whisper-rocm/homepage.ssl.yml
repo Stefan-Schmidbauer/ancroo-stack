@@ -1,0 +1,9 @@
+# Whisper ROCm Dashboard Widget — SSL mode
+- Speech:
+    - Whisper ROCm:
+        icon: mdi-microphone
+        href: https://${WHISPER_ROCM_DOMAIN}/docs
+        description: Speech-to-Text (AMD ROCm GPU)
+        siteMonitor: http://whisper-rocm:8000/health
+        server: local
+        container: whisper-rocm

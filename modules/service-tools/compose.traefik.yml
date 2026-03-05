@@ -1,0 +1,8 @@
+services:
+  service-tools:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.service-tools.rule=Host(`${SERVICE_TOOLS_DOMAIN}`)"
+      - "traefik.http.routers.service-tools.entrypoints=websecure"
+      - "traefik.http.routers.service-tools.tls=true"
+      - "traefik.http.services.service-tools.loadbalancer.server.port=8000"

@@ -1,0 +1,10 @@
+services:
+  traefik:
+    labels:
+      - "traefik.http.routers.traefik.middlewares=keycloak-forward-auth"
+  homepage:
+    labels:
+      - "traefik.http.routers.homepage.middlewares=keycloak-forward-auth"
+  ollama:
+    labels:
+      - "traefik.http.routers.ollama.middlewares=keycloak-forward-auth"

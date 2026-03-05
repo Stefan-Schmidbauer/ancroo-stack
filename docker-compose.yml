@@ -1,0 +1,94 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${TZ}
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+      - ./tools/config/init/init-pgvector.sh:/docker-entrypoint-initdb.d/init-pgvector.sh:ro
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ./data/ollama:/root/.ollama
+    networks:
+      - ai-network
+    environment:
+      - TZ=${TZ}
+    healthcheck:
+      test: ["CMD", "ollama", "ps"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: open-webui
+    restart: unless-stopped
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - VECTOR_DB=pgvector
+      - ENABLE_SIGNUP=true
+      - TZ=${TZ}
+    volumes:
+      - ./data/open-webui:/app/backend/data
+    networks:
+      - ai-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${DOCKER_GID}
+      - TZ=${TZ}
+      - HOMEPAGE_ALLOWED_HOSTS=*
+    volumes:
+      - ./data/homepage:/app/config
+      - ./data/homepage/services.yaml:/app/src/skeleton/services.yaml:ro
+      - ./data/homepage/bookmarks.yaml:/app/src/skeleton/bookmarks.yaml:ro
+      - ./data/homepage/settings.yaml:/app/src/skeleton/settings.yaml:ro
+      - ./data/homepage/widgets.yaml:/app/src/skeleton/widgets.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  ai-network:
+    name: ai-network
+    driver: bridge

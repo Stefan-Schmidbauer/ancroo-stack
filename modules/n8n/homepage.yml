@@ -1,0 +1,9 @@
+# n8n Dashboard Widget
+- Automation:
+    - n8n:
+        icon: mdi-sitemap
+        href: http://${HOST_IP}:${N8N_PORT}
+        description: Open-Source Workflow Automation
+        siteMonitor: http://n8n:5678
+        server: local
+        container: n8n

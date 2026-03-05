@@ -1,0 +1,9 @@
+# Adminer Dashboard Widget
+- Administration:
+    - Adminer:
+        icon: mdi-database
+        href: http://${HOST_IP}:${ADMINER_PORT}
+        description: Database Management UI
+        siteMonitor: http://adminer:8080
+        server: local
+        container: adminer

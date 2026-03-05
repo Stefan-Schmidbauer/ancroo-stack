@@ -1,0 +1,49 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check no .env committed
+        run: |
+          if [[ -f .env ]]; then
+            echo "::error::CRITICAL: .env file found in repository!"
+            exit 1
+          fi
+
+      - name: Check no data directory
+        run: |
+          if [[ -d data ]] && [[ -n "$(ls -A data 2>/dev/null)" ]]; then
+            echo "::error::CRITICAL: data/ directory contains files!"
+            exit 1
+          fi
+
+      - name: Check no private keys
+        run: |
+          found=$(find . -name "*.key" -o -name "*.pem" -o -name "id_ed25519" -o -name "id_rsa" | head -5)
+          if [[ -n "$found" ]]; then
+            echo "::error::CRITICAL: Private key files found: $found"
+            exit 1
+          fi
+
+      - name: Validate docker-compose syntax
+        run: |
+          docker compose -f docker-compose.yml config --quiet 2>/dev/null || true

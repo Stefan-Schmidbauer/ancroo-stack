@@ -1,0 +1,4 @@
+services:
+  whisper-rocm:
+    ports:
+      - "${WHISPER_ROCM_PORT:-8002}:8000"

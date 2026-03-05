@@ -1,0 +1,28 @@
+ancroo-stack
+Copyright 2026 Stefan Schmidbauer
+
+This product is licensed under the Apache License, Version 2.0.
+
+This product orchestrates third-party software via Docker containers.
+Each module's software is governed by its own license:
+
+Open WebUI — Open WebUI License (https://docs.openwebui.com/license/)
+Ollama — MIT License (https://github.com/ollama/ollama/blob/main/LICENSE)
+BookStack — MIT License (https://github.com/BookStackApp/BookStack/blob/development/LICENSE)
+MariaDB — GNU GPL v2 (https://mariadb.com/kb/en/mariadb-license/)
+n8n — Sustainable Use License (https://github.com/n8n-io/n8n/blob/master/LICENSE.md)
+Speaches — MIT License (https://github.com/speaches-ai/speaches/blob/main/LICENSE)
+Keycloak — Apache License 2.0 (https://github.com/keycloak/keycloak/blob/main/LICENSE.txt)
+PostgreSQL — PostgreSQL License (https://www.postgresql.org/about/licence/)
+pgvector — PostgreSQL License (https://github.com/pgvector/pgvector/blob/master/LICENSE)
+Valkey — BSD 3-Clause License (https://github.com/valkey-io/valkey/blob/unstable/LICENSE.txt)
+Traefik — MIT License (https://github.com/traefik/traefik/blob/master/LICENSE.md)
+Homepage — GNU GPL v3 (https://github.com/gethomepage/homepage/blob/main/LICENSE)
+Adminer — Apache License 2.0 / GPL v2 (https://github.com/vrana/adminer/blob/master/readme.txt)
+oauth2-proxy — MIT License (https://github.com/oauth2-proxy/oauth2-proxy/blob/main/LICENSE)
+acme.sh — GNU GPL v3 (https://github.com/acmesh-official/acme.sh/blob/master/LICENSE.md)
+PyTorch — BSD License (https://github.com/pytorch/pytorch/blob/main/LICENSE)
+HuggingFace Transformers — Apache License 2.0 (https://github.com/huggingface/transformers/blob/main/LICENSE)
+OpenAI Whisper Models — MIT License (https://github.com/openai/whisper/blob/main/LICENSE)
+
+Note: Open WebUI changed from MIT to a custom license (Open WebUI License).

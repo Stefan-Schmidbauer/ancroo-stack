@@ -1,0 +1,4 @@
+services:
+  n8n:
+    ports:
+      - "${N8N_PORT:-5678}:5678"

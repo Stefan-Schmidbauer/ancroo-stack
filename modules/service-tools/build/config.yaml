@@ -1,0 +1,21 @@
+# Speaches Transcription Tool - Konfiguration (Docker-Netzwerk)
+
+# Speaches Server Einstellungen
+server:
+  url: "http://speaches:8000/v1/audio/transcriptions"
+  token: ""                        # Bearer Token (leer lassen falls nicht benötigt)
+  disable_ssl_verify: false        # true = selbstsignierte Zertifikate erlauben
+
+# Transcription Einstellungen
+whisper:
+  language: "de"                   # Sprache erzwingen (z.B. "de", "en"), leer = Auto-Erkennung
+  model: "Systran/faster-whisper-large-v3-turbo"  # Hugging Face Modellname (Pflichtfeld für Speaches)
+  response_format: "text"          # text, json, verbose_json
+
+# Audio-Splitting Einstellungen
+splitting:
+  min_silence_duration_ms: 700     # Minimale Pausendauer zum Splitten (ms)
+  silence_threshold_dbfs: -40      # Lautstärke-Schwelle für Stille (dBFS)
+  min_chunk_duration_s: 20         # Kleine Stücke zusammenfügen bis Mindestdauer erreicht
+  max_chunk_duration_s: 120        # Maximale Chunk-Länge (Sekunden), Fallback wenn keine Pause
+  overlap_ms: 200                  # Überlappung zwischen Chunks (ms), verhindert abgeschnittene Wörter

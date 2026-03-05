@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# pre-commit hook — gitleaks secret scanning
+# Install: cp tools/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+set -euo pipefail
+
+if command -v gitleaks &>/dev/null; then
+    gitleaks git --pre-commit --staged --verbose || {
+        echo ""
+        echo "gitleaks detected secrets in staged files. Commit blocked."
+        echo "Review the findings above and remove secrets before committing."
+        exit 1
+    }
+else
+    echo "Warning: gitleaks not installed. Skipping secret scan."
+    echo "  Install: https://github.com/gitleaks/gitleaks#installing"
+fi

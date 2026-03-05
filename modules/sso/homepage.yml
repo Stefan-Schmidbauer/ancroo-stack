@@ -1,0 +1,9 @@
+# Keycloak Dashboard Widget
+- Administration:
+    - Keycloak:
+        icon: sh-keycloak
+        href: http://${HOST_IP}:${KEYCLOAK_PORT:-8080}
+        description: Identity & Access Management
+        siteMonitor: http://keycloak:9000/health/ready
+        server: local
+        container: keycloak

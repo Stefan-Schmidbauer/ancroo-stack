@@ -1,0 +1,6 @@
+# SSO Module — BookStack OIDC DNS Resolution
+# Compose Merge: allows BookStack to resolve Keycloak domain via host-gateway
+services:
+  bookstack:
+    extra_hosts:
+      - "${KEYCLOAK_DOMAIN}:host-gateway"

@@ -1,0 +1,9 @@
+# BookStack Dashboard Widget
+- Knowledge:
+    - BookStack:
+        icon: mdi-book-open-page-variant
+        href: http://${HOST_IP}:${BOOKSTACK_PORT}
+        description: Knowledge Base / Wiki
+        siteMonitor: http://bookstack:80/status
+        server: local
+        container: bookstack

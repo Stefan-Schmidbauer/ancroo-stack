@@ -1,0 +1,17 @@
+services:
+  ollama:
+    image: ollama/ollama:${OLLAMA_IMAGE_TAG:-rocm}
+    ipc: host
+    entrypoint: ["/bin/sh", "-c", "[ -z \"$HSA_OVERRIDE_GFX_VERSION\" ] && unset HSA_OVERRIDE_GFX_VERSION; exec /bin/ollama serve"]
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION:-}
+      - OLLAMA_VULKAN=${OLLAMA_VULKAN:-}
+      - HIP_VISIBLE_DEVICES=${HIP_VISIBLE_DEVICES:-}
+      - OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION:-}

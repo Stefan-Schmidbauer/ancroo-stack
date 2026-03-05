@@ -1,0 +1,9 @@
+# Service Tools Dashboard Widget — SSL mode
+- Administration:
+    - Service Tools:
+        icon: mdi-wrench-cog
+        href: https://${SERVICE_TOOLS_DOMAIN}/health
+        description: Reusable automation service tools
+        siteMonitor: http://service-tools:8000/health
+        server: local
+        container: service-tools

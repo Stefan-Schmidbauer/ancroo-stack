@@ -1,0 +1,8 @@
+services:
+  whisper-rocm:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whisper-rocm.rule=Host(`${WHISPER_ROCM_DOMAIN}`)"
+      - "traefik.http.routers.whisper-rocm.entrypoints=websecure"
+      - "traefik.http.routers.whisper-rocm.tls=true"
+      - "traefik.http.services.whisper-rocm.loadbalancer.server.port=8000"

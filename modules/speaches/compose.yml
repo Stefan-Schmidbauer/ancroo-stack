@@ -1,0 +1,26 @@
+services:
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    container_name: speaches
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - HF_HUB_OFFLINE=0
+      - CHAT_COMPLETION_BASE_URL=http://ollama:11434/v1
+      - WHISPER__VAD_FILTER=true
+      - WHISPER__CONDITION_ON_PREVIOUS_TEXT=false
+      - WHISPER__TEMPERATURE=0.2
+      - WHISPER__COMPRESSION_RATIO_THRESHOLD=2.4
+      - WHISPER__LOGPROB_THRESHOLD=-1.0
+      - WHISPER__NO_SPEECH_THRESHOLD=0.6
+      - WHISPER__BEST_OF=10
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    volumes:
+      - ./data/speaches:/home/ubuntu/.cache/huggingface
+    networks:
+      - ai-network

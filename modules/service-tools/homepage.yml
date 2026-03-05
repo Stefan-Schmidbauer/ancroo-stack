@@ -1,0 +1,9 @@
+# Service Tools Dashboard Widget
+- Administration:
+    - Service Tools:
+        icon: mdi-wrench-cog
+        href: http://${HOST_IP}:${SERVICE_TOOLS_PORT}/health
+        description: Reusable automation service tools
+        siteMonitor: http://service-tools:8000/health
+        server: local
+        container: service-tools

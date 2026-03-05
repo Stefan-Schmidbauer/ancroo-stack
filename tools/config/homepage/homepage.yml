@@ -1,0 +1,18 @@
+# Core AI Tools — always included in dashboard
+- AI Tools:
+    - Open WebUI:
+        icon: sh-open-webui
+        href: http://${HOST_IP}:8080
+        description: LLM Chat Interface + RAG
+        siteMonitor: http://open-webui:8080
+        server: local
+        container: open-webui
+
+- Administration:
+    - Ollama:
+        icon: sh-ollama
+        href: http://${HOST_IP}:11434
+        description: LLM Backend API
+        siteMonitor: http://ollama:11434
+        server: local
+        container: ollama

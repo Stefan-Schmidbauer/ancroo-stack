@@ -1,0 +1,4 @@
+services:
+  n8n:
+    labels:
+      - "traefik.http.routers.n8n.middlewares=keycloak-forward-auth"

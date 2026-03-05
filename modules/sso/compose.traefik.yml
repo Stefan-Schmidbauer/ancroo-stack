@@ -1,0 +1,22 @@
+services:
+  keycloak:
+    labels:
+      - "traefik.enable=true"
+      # Keycloak Admin UI + OIDC Endpoints
+      - "traefik.http.routers.keycloak.rule=Host(`${KEYCLOAK_DOMAIN}`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls=true"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+  oauth2-proxy:
+    labels:
+      - "traefik.enable=true"
+      # OAuth2 Callback Route
+      - "traefik.http.routers.oauth2-callback.rule=Host(`${KEYCLOAK_DOMAIN}`) && PathPrefix(`/oauth2`)"
+      - "traefik.http.routers.oauth2-callback.entrypoints=websecure"
+      - "traefik.http.routers.oauth2-callback.tls=true"
+      - "traefik.http.routers.oauth2-callback.priority=100"
+      - "traefik.http.services.oauth2-proxy.loadbalancer.server.port=4180"
+      # Forward Auth Middleware — wird von anderen Services referenziert
+      - "traefik.http.middlewares.keycloak-forward-auth.forwardAuth.address=http://oauth2-proxy:4180"
+      - "traefik.http.middlewares.keycloak-forward-auth.forwardAuth.trustForwardHeader=true"
+      - "traefik.http.middlewares.keycloak-forward-auth.forwardAuth.authResponseHeaders=X-Auth-Request-User,X-Auth-Request-Email,X-Auth-Request-Groups,X-Auth-Request-Access-Token"

@@ -1,0 +1,64 @@
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack:latest
+    container_name: bookstack
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PUID}
+      - TZ=${TZ}
+      - APP_URL=${BOOKSTACK_APP_URL:-http://localhost:8875}
+      - APP_KEY=${BOOKSTACK_APP_KEY}
+      - DB_HOST=${BOOKSTACK_DB_HOST:-bookstack-db}
+      - DB_PORT=${BOOKSTACK_DB_PORT:-3306}
+      - DB_DATABASE=${BOOKSTACK_DB_DATABASE:-bookstack}
+      - DB_USERNAME=${BOOKSTACK_DB_USER:-bookstack}
+      - DB_PASSWORD=${BOOKSTACK_DB_PASSWORD}
+      # OIDC/SSO (only effective when BOOKSTACK_AUTH_METHOD=oidc)
+      - AUTH_METHOD=${BOOKSTACK_AUTH_METHOD:-standard}
+      - OIDC_NAME=${BOOKSTACK_OIDC_NAME:-Keycloak}
+      - OIDC_CLIENT_ID=${BOOKSTACK_OIDC_CLIENT_ID:-bookstack}
+      - OIDC_CLIENT_SECRET=${BOOKSTACK_OIDC_CLIENT_SECRET:-}
+      - OIDC_ISSUER=${BOOKSTACK_OIDC_ISSUER:-}
+      - OIDC_ISSUER_DISCOVER=true
+      - OIDC_END_SESSION_ENDPOINT=true
+      - OIDC_DISPLAY_NAME_CLAIMS=name
+      - OIDC_GROUPS_CLAIM=groups
+      - OIDC_USER_TO_GROUPS=true
+      - OIDC_ADDITIONAL_SCOPES=
+      - OIDC_REMOVE_FROM_GROUPS=true
+      # API rate limit
+      - API_REQUESTS_PER_MIN=180
+    volumes:
+      - ./data/bookstack:/config
+    networks:
+      - ai-network
+    depends_on:
+      bookstack-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  bookstack-db:
+    image: mariadb:11
+    container_name: bookstack-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD=${BOOKSTACK_DB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${BOOKSTACK_DB_DATABASE:-bookstack}
+      - MARIADB_USER=${BOOKSTACK_DB_USER:-bookstack}
+      - MARIADB_PASSWORD=${BOOKSTACK_DB_PASSWORD}
+      - TZ=${TZ}
+    volumes:
+      - ./data/bookstack-db:/var/lib/mysql
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

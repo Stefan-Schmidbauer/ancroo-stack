@@ -40,12 +40,12 @@ graph LR
 ## Quick Start
 
 ```bash
-git clone https://github.com/Stefan-Schmidbauer/ancroo-stack.git
+git clone https://github.com/ancroo/ancroo-stack.git
 cd ancroo-stack
 bash install.sh
 ```
 
-The guided installer walks you through GPU selection, STT module choice, and optional components. It also installs the Ancroo Backend and Browser Extension if their repos are present as sibling directories (cloned automatically by the [Ancroo meta-installer](https://github.com/Stefan-Schmidbauer/ancroo)).
+The guided installer walks you through GPU selection, STT module choice, and optional components. It also installs the Ancroo Backend and Browser Extension if their repos are present as sibling directories (cloned automatically by the [Ancroo meta-installer](https://github.com/ancroo/ancroo)).
 
 After installation, your base stack is running:
 
@@ -74,7 +74,7 @@ Extend the stack with `./module.sh enable <module>...`. Dependencies are resolve
 | --------------------------------------- | --------------------------------- | ------- | ------------ | --------------------------------------------------- |
 | [n8n](modules/n8n/)                     | Workflow automation               | 5678    | —            | [README](modules/n8n/README.md)                     |
 | [bookstack](modules/bookstack/)         | Wiki / knowledge base             | 8875    | —            | [README](modules/bookstack/README.md)               |
-| [ancroo](modules/ancroo/)               | AI workflow backend               | 8900    | n8n          | [README](modules/ancroo/README.md)                  |
+| [ancroo-backend](modules/ancroo-backend/) | AI workflow backend             | 8900    | n8n          | [README](modules/ancroo-backend/README.md)          |
 | [speaches](modules/speaches/)           | Speech-to-Text (NVIDIA CUDA)      | 8100    | —            | [README](modules/speaches/README.md)                |
 | [whisper-rocm](modules/whisper-rocm/)   | Speech-to-Text (AMD GPU)          | 8002    | —            | [README](modules/whisper-rocm/README.md)            |
 | [service-tools](modules/service-tools/) | Reusable HTTP API tools           | 8500    | speaches     | [README](modules/service-tools/README.md)           |
@@ -152,11 +152,11 @@ For NVIDIA GPU support, install the [NVIDIA Container Toolkit](https://docs.nvid
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/Stefan-Schmidbauer/ancroo-stack/issues) or submit a pull request.
+Contributions are welcome! Feel free to open an [issue](https://github.com/ancroo/ancroo-stack/issues) or submit a pull request.
 
 ## Security
 
-To report a security vulnerability, please use [GitHub's private vulnerability reporting](https://github.com/Stefan-Schmidbauer/ancroo-stack/security/advisories/new) instead of opening a public issue.
+To report a security vulnerability, please use [GitHub's private vulnerability reporting](https://github.com/ancroo/ancroo-stack/security/advisories/new) instead of opening a public issue.
 
 ## License
 

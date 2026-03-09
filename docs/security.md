@@ -54,6 +54,6 @@ docker compose up -d
 
 ## Vulnerability Reporting
 
-Report security issues privately via [GitHub Security Advisory](https://github.com/Stefan-Schmidbauer/ancroo-stack/security/advisories/new).
+Report security issues privately via [GitHub Security Advisory](https://github.com/ancroo/ancroo-stack/security/advisories/new).
 
 Response time: within 48 hours.

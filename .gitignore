@@ -19,8 +19,9 @@ __pycache__/
 # Downloaded certificates (fetched by ssl/post-enable.sh at runtime)
 modules/ssl/certs/
 
-# External module symlinks (ancroo is a separate project)
-modules/ancroo
+# External modules (installed by their own install-stack.sh)
+modules/ancroo-backend
+modules/ancroo-runner
 
 # Internal documentation (architecture, testing, roadmap)
 internal/

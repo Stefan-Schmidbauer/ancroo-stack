@@ -28,6 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BACKEND_DIR="${WORKSPACE_ROOT}/ancroo-backend"
+RUNNER_DIR="${WORKSPACE_ROOT}/ancroo-runner"
 WEB_DIR="${WORKSPACE_ROOT}/ancroo-web"
 
 source "$SCRIPT_DIR/tools/install/lib/common.sh"
@@ -211,6 +212,15 @@ else
     print_info "Ancroo Backend: not found (${BACKEND_DIR}) — skipping"
 fi
 
+ENABLE_RUNNER=false
+
+if [[ -d "$RUNNER_DIR" ]]; then
+    ENABLE_RUNNER=true
+    print_success "Ancroo Runner: found at ${RUNNER_DIR}"
+else
+    print_info "Ancroo Runner: not found (${RUNNER_DIR}) — skipping"
+fi
+
 if [[ -d "$WEB_DIR" ]]; then
     ENABLE_EXTENSION=true
     print_success "Ancroo Extension: found at ${WEB_DIR}"
@@ -260,6 +270,16 @@ if $ENABLE_BACKEND; then
     [[ -n "${ancroo_port:-}" ]] && PORT_CHECK_MAP[$ancroo_port]="Ancroo Backend"
 fi
 
+# Ancroo Runner (module.conf in runner repo or already installed in stack)
+if $ENABLE_RUNNER; then
+    if [[ -f "$RUNNER_DIR/module/module.conf" ]]; then
+        runner_port=$(get_module_port "$RUNNER_DIR/module/module.conf") || true
+    elif [[ -f "$PROJECT_ROOT/modules/ancroo-runner/module.conf" ]]; then
+        runner_port=$(get_module_port "$PROJECT_ROOT/modules/ancroo-runner/module.conf") || true
+    fi
+    [[ -n "${runner_port:-}" ]] && PORT_CHECK_MAP[$runner_port]="Ancroo Runner"
+fi
+
 blocked_ports=()
 for port in "${!PORT_CHECK_MAP[@]}"; do
     if ! check_port_available "$port"; then
@@ -300,9 +320,10 @@ echo "  Core modules:  n8n adminer"
 [[ "$ENABLE_BOOKSTACK" == "y" ]] && echo "  Optional:      bookstack"
 echo "  Ollama model:  ${OLLAMA_PULL_MODEL:-none}"
 $ENABLE_BACKEND && echo "  Ancroo:        backend" || true
+$ENABLE_RUNNER && echo "  Runner:        ancroo-runner" || true
 $ENABLE_EXTENSION && echo "  Extension:     browser extension" || true
 echo ""
-echo -e "  ${YELLOW}Service Tools, SSL, SSO — experimental, available via module.sh${NC}"
+echo -e "  ${YELLOW}SSL, SSO — experimental, available via module.sh${NC}"
 echo ""
 if [[ -z "${ANCROO_NONINTERACTIVE:-}" ]]; then
     echo -e "  ${YELLOW}Press Enter to start, Ctrl+C to cancel.${NC}"
@@ -310,7 +331,7 @@ if [[ -z "${ANCROO_NONINTERACTIVE:-}" ]]; then
 fi
 
 if $DEV_MODE; then
-    print_info "Dev mode (--dev): will build backend image and extension from local source"
+    print_info "Dev mode (--dev): will build backend, runner, and extension from local source"
 fi
 
 # ─────────────────────────────────────────────────────────
@@ -493,13 +514,13 @@ if $ENABLE_BACKEND; then
         export ANCROO_LOCAL_BUILD="y"
         print_step "Dev mode: building ancroo-backend image from local source..."
         docker build \
-            -t ghcr.io/stefan-schmidbauer/ancroo-backend:latest \
+            -t ghcr.io/ancroo/ancroo-backend:latest \
             --build-arg BUILD_COMMIT="$(cd "$BACKEND_DIR" && git rev-parse --short HEAD 2>/dev/null || echo dev)" \
             --build-arg BUILD_VERSION=dev \
             "$BACKEND_DIR"
         print_success "ancroo-backend image built from local source"
     else
-        BACKEND_IMAGE="ghcr.io/stefan-schmidbauer/ancroo-backend:latest"
+        BACKEND_IMAGE="ghcr.io/ancroo/ancroo-backend:latest"
         print_step "Pulling backend image: ${BACKEND_IMAGE}"
         if docker pull "$BACKEND_IMAGE"; then
             print_success "Backend image pulled"
@@ -525,6 +546,50 @@ if $ENABLE_BACKEND; then
 fi
 
 # ─────────────────────────────────────────────────────────
+# ANCROO RUNNER
+# ─────────────────────────────────────────────────────────
+if $ENABLE_RUNNER; then
+    print_header "Ancroo Runner"
+
+    if $DEV_MODE; then
+        export ANCROO_LOCAL_BUILD=y
+        print_step "Dev mode: building ancroo-runner image from local source..."
+        docker build \
+            --build-arg BUILD_COMMIT="$(cd "$RUNNER_DIR" && git rev-parse --short HEAD 2>/dev/null || echo dev)" \
+            -t ghcr.io/ancroo/ancroo-runner:latest \
+            "$RUNNER_DIR"
+        print_success "ancroo-runner image built from local source"
+    else
+        RUNNER_IMAGE="ghcr.io/ancroo/ancroo-runner:latest"
+        print_step "Pulling runner image: ${RUNNER_IMAGE}"
+        if docker pull "$RUNNER_IMAGE"; then
+            print_success "Runner image pulled"
+        else
+            echo ""
+            print_error "Could not pull ${RUNNER_IMAGE}"
+            print_info "Check your Docker credentials or Internet connection"
+            echo ""
+            if [[ -n "${ANCROO_NONINTERACTIVE:-}" ]]; then
+                print_warning "Non-interactive mode: continuing without runner (image not available)"
+                ENABLE_RUNNER=false
+            elif ! confirm "Continue without the runner?" "n"; then
+                print_info "Installation aborted — resolve the issue and try again"
+                exit 1
+            else
+                ENABLE_RUNNER=false
+            fi
+        fi
+    fi
+
+    if $ENABLE_RUNNER; then
+        ANCROO_INSTALL_OVERWRITE=y ANCROO_ENABLE_NOW=y \
+            bash "$RUNNER_DIR/install-stack.sh" "$PROJECT_ROOT"
+        unset ANCROO_INSTALL_OVERWRITE ANCROO_ENABLE_NOW
+        $DEV_MODE && unset ANCROO_LOCAL_BUILD || true
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────
 # ANCROO EXTENSION
 # ─────────────────────────────────────────────────────────
 if $ENABLE_EXTENSION; then
@@ -545,7 +610,7 @@ if $ENABLE_EXTENSION; then
         else
             print_step "Downloading latest build artifact from GitHub Actions..."
             if gh run download \
-                --repo Stefan-Schmidbauer/ancroo-web \
+                --repo ancroo/ancroo-web \
                 --name ancroo-web-extension \
                 --dir "$WEB_DIR/dist" 2>/dev/null; then
                 print_success "Ancroo extension downloaded to ${WEB_DIR}/dist/"
@@ -679,6 +744,13 @@ if $ENABLE_BACKEND; then
     echo -e "    Admin:    ${CYAN}http://${HOST_IP}:8900/admin${NC}"
 fi
 
+if $ENABLE_RUNNER; then
+    echo ""
+    echo -e "  ${BOLD}Ancroo Runner:${NC}"
+    echo -e "    URL:      ${CYAN}http://${HOST_IP}:8510${NC}"
+    echo -e "    Plugins:  ${CYAN}${PROJECT_ROOT}/data/ancroo-runner/plugins${NC}"
+fi
+
 if $ENABLE_EXTENSION; then
     echo ""
     echo -e "  ${BOLD}Ancroo Extension (load in Chrome):${NC}"
@@ -703,7 +775,6 @@ echo "    ./module.sh status         — running status"
 echo "    ./module.sh enable <name>  — add a module"
 echo ""
 echo -e "  ${BOLD}Optional modules ${YELLOW}(experimental, enable manually)${NC}${BOLD}:${NC}"
-echo -e "    Service Tools: ${CYAN}./module.sh enable service-tools${NC}"
 echo -e "    SSL:           ${CYAN}./module.sh enable ssl${NC}"
 echo -e "    SSO:           ${CYAN}./module.sh enable sso${NC}"
 

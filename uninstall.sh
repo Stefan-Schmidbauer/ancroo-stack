@@ -256,7 +256,7 @@ if [[ "$remove_images" =~ ^[jJyY]$ ]]; then
         "pgvector/pgvector"
         "ghcr.io/gethomepage/homepage"
         "docker.n8n.io/n8nio/n8n" "n8nio/n8n"
-        "ghcr.io/stefan-schmidbauer/ancroo-backend"
+        "ghcr.io/ancroo/ancroo-backend"
         "lscr.io/linuxserver/bookstack"
         "mariadb"
         "valkey/valkey"

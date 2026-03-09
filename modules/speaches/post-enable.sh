@@ -22,7 +22,7 @@ source "$PROJECT_ROOT/tools/install/lib/common.sh" 2>/dev/null || {
     safe_source_env() { set -a; source "$1"; set +a; }
 }
 
-DEFAULT_MODEL="Systran/faster-whisper-large-v3-turbo"
+DEFAULT_MODEL="Systran/faster-whisper-large-v3"
 
 safe_source_env "$ENV_FILE"
 

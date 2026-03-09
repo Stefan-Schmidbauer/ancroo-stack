@@ -9,7 +9,7 @@ server:
 # Transcription Einstellungen
 whisper:
   language: "de"                   # Sprache erzwingen (z.B. "de", "en"), leer = Auto-Erkennung
-  model: "Systran/faster-whisper-large-v3-turbo"  # Hugging Face Modellname (Pflichtfeld für Speaches)
+  model: "Systran/faster-whisper-large-v3"  # Hugging Face Modellname (Pflichtfeld für Speaches)
   response_format: "text"          # text, json, verbose_json
 
 # Audio-Splitting Einstellungen

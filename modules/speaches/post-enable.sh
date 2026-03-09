@@ -65,7 +65,7 @@ sys.exit(0 if '$MODEL' in models else 1)
 fi
 
 # ─── Ask before downloading ───────────────────────────────
-if [[ -z "${SKIP_CONFIRM:-}" ]]; then
+if [[ -z "${SKIP_CONFIRM:-}" ]] && [[ -z "${ANCROO_NONINTERACTIVE:-}" ]]; then
     echo ""
     echo -ne "  Download Whisper model ${MODEL}? [J/n]: "
     read -r dl_confirm

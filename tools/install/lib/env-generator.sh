@@ -61,19 +61,19 @@ write_rocm_gpu_env() {
 
     # gfx_target_version format: MMPPP (e.g. 110501 = gfx1151, 110000 = gfx1100)
     case "$gfx_version" in
-        110501|1151)
-            # gfx1151 / RDNA 4 / Strix Halo — HIP kernels not available, use Vulkan
-            print_info "GPU: gfx1151 (RDNA 4) detected — using Vulkan backend"
+        110501|1151|110500|1105)
+            # gfx1151 (RDNA 3.5 / Strix Halo) or gfx1105 (RDNA 3 iGPU) — HIP not working, use Vulkan
+            print_info "GPU: gfx${gfx_version} detected — using Vulkan backend"
             cat >> "$PROJECT_ROOT/.env" << 'GPUEOF'
 
-# Ollama GPU (auto-detected: gfx1151 / RDNA 4 — Vulkan mode)
+# Ollama GPU (auto-detected: Vulkan mode — HIP not supported for this GPU)
 OLLAMA_IMAGE_TAG="latest"
 OLLAMA_VULKAN="1"
 HIP_VISIBLE_DEVICES="-1"
 GPUEOF
             ;;
         110000|110100|110200|1100|1101|1102)
-            # RDNA 3 — native HIP support
+            # RDNA 3 (discrete) — native HIP support
             print_info "GPU: RDNA 3 detected — using native HIP backend"
             ;;
         103000|1030)

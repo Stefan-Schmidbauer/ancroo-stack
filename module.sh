@@ -1295,6 +1295,17 @@ cmd_gpu() {
     fi
     update_env_var "ENABLED_MODULES" "$new_modules"
 
+    # Auto-detect AMD GPU architecture and set Vulkan/HIP vars
+    if [[ "$new_mode" == "rocm" ]]; then
+        _detect_and_configure_rocm_gpu
+    else
+        # Switching away from ROCm: reset GPU-specific vars
+        update_env_var "OLLAMA_IMAGE_TAG" ""
+        update_env_var "OLLAMA_VULKAN" ""
+        update_env_var "HIP_VISIBLE_DEVICES" ""
+        update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
+    fi
+
     # Reconcile COMPOSE_FILE
     reconcile_compose
 
@@ -1305,6 +1316,69 @@ cmd_gpu() {
 
     log_action "GPU" "$new_mode" "SUCCESS" "Changed from $old_mode to $new_mode"
     print_success "GPU-Modus gewechselt: $old_mode → $new_mode"
+}
+
+_detect_and_configure_rocm_gpu() {
+    # Detect AMD GPU architecture from KFD topology
+    local gfx_version=""
+    for node_dir in /sys/class/kfd/kfd/topology/nodes/*/; do
+        local props="$node_dir/properties"
+        [[ -f "$props" ]] || continue
+        local target
+        target=$(grep '^gfx_target_version' "$props" 2>/dev/null | awk '{print $2}')
+        if [[ -n "$target" && "$target" != "0" ]]; then
+            gfx_version="$target"
+            break
+        fi
+    done
+    # Fallback: try rocminfo
+    if [[ -z "$gfx_version" ]] && command -v rocminfo &>/dev/null; then
+        gfx_version=$(rocminfo 2>/dev/null | grep -oP 'gfx\K[0-9]+' | head -1)
+    fi
+
+    if [[ -z "$gfx_version" ]]; then
+        print_warning "No AMD GPU detected — ROCm will run in CPU fallback mode"
+        return
+    fi
+
+    case "$gfx_version" in
+        110501|1151|110500|1105)
+            # gfx1151 (RDNA 3.5) or gfx1105 (RDNA 3 iGPU) — HIP not working, use Vulkan
+            print_info "GPU: gfx${gfx_version} detected — using Vulkan backend"
+            update_env_var "OLLAMA_IMAGE_TAG" "latest"
+            update_env_var "OLLAMA_VULKAN" "1"
+            update_env_var "HIP_VISIBLE_DEVICES" "-1"
+            update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
+            ;;
+        110000|110100|110200|1100|1101|1102)
+            print_info "GPU: RDNA 3 detected — using native HIP backend"
+            update_env_var "OLLAMA_IMAGE_TAG" ""
+            update_env_var "OLLAMA_VULKAN" ""
+            update_env_var "HIP_VISIBLE_DEVICES" ""
+            update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
+            ;;
+        103000|1030)
+            print_info "GPU: RDNA 2 detected — using native HIP backend"
+            update_env_var "OLLAMA_IMAGE_TAG" ""
+            update_env_var "OLLAMA_VULKAN" ""
+            update_env_var "HIP_VISIBLE_DEVICES" ""
+            update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
+            ;;
+        90800|90a00|94200|95000|908|90a|942|950)
+            print_info "GPU: AMD Instinct detected — using native HIP backend"
+            update_env_var "OLLAMA_IMAGE_TAG" ""
+            update_env_var "OLLAMA_VULKAN" ""
+            update_env_var "HIP_VISIBLE_DEVICES" ""
+            update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
+            ;;
+        *)
+            print_warning "GPU architecture $gfx_version not explicitly supported"
+            print_warning "HIP will be attempted — if issues occur, set HSA_OVERRIDE_GFX_VERSION in .env"
+            update_env_var "OLLAMA_IMAGE_TAG" ""
+            update_env_var "OLLAMA_VULKAN" ""
+            update_env_var "HIP_VISIBLE_DEVICES" ""
+            ;;
+    esac
 }
 
 prepare_module_resources() {

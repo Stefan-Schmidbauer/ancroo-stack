@@ -27,13 +27,14 @@ Works with well-supported AMD GPUs:
 
 Uses the `ollama/ollama:rocm` Docker image. Some GPUs may require `HSA_OVERRIDE_GFX_VERSION` to map to a supported architecture.
 
-### Vulkan (recommended for gfx1151 / Strix Halo)
+### Vulkan (recommended for gfx1151 / gfx1105)
 
-The official `ollama:rocm` image lacks working HIP kernels for RDNA 3.5 GPUs (gfx1151). The Vulkan backend bypasses HIP entirely and works reliably on these GPUs.
+The official `ollama:rocm` image lacks working HIP kernels for some GPUs. The Vulkan backend bypasses HIP entirely and works reliably on these GPUs.
 
 | Architecture | GPUs | Status |
 |-------------|------|--------|
 | gfx1151 | RDNA 3.5 (Radeon 8060S, Ryzen AI MAX+ 395) | Vulkan recommended |
+| gfx1105 | RDNA 3 iGPU (Ryzen 7840U/7940HS, 780M/760M) | Vulkan recommended |
 
 Vulkan is actually **faster** than HIP on gfx1151 for prompt processing (~881 vs ~348 tok/s on 7B Q4_0 models). Token generation performance is comparable (~60 tok/s).
 
@@ -48,7 +49,7 @@ Add to `.env`:
 HSA_OVERRIDE_GFX_VERSION=11.0.0
 ```
 
-### Vulkan mode (gfx1151)
+### Vulkan mode (gfx1151 / gfx1105)
 
 Add to `.env`:
 
@@ -83,7 +84,7 @@ lspci | grep -i vga
 
 ## Known issues
 
-- **gfx1151 + HIP**: Runner crashes with `exit status 2` regardless of `HSA_OVERRIDE_GFX_VERSION` value. Use Vulkan mode instead.
+- **gfx1151 / gfx1105 + HIP**: Runner crashes or GPU not detected regardless of `HSA_OVERRIDE_GFX_VERSION` value. Use Vulkan mode instead (auto-detected by installer).
 - **gfx1151 + ROCm 7.x**: Flash attention may cause bootstrap discovery failures. Set `OLLAMA_FLASH_ATTENTION=false` if using a custom ROCm image.
 
 ## Disable

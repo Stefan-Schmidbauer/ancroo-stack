@@ -1,10 +1,10 @@
 # gpu-rocm — AMD GPU Acceleration for Ollama
 
-Enables AMD GPU acceleration for Ollama using either ROCm/HIP or Vulkan compute backend.
+Enables AMD GPU acceleration for Ollama using ROCm/HIP.
 
 ## Prerequisites
 
-Requires AMD GPU with ROCm or Vulkan support. Conflicts with `gpu-nvidia`.
+Requires AMD GPU with ROCm support. Conflicts with `gpu-nvidia`.
 
 ## Enable
 
@@ -12,80 +12,67 @@ Requires AMD GPU with ROCm or Vulkan support. Conflicts with `gpu-nvidia`.
 ./module.sh enable gpu-rocm
 ```
 
-## GPU Backends
+## GPU Support Matrix
 
-### ROCm/HIP (default)
+| Architecture | GPUs | ROCm Image | Notes |
+|---|---|---|---|
+| gfx1030 | RDNA 2 (RX 6000 series) | `rocm` | Native support |
+| gfx1100–1102 | RDNA 3 (RX 7000 series) | `rocm` | Native support |
+| gfx1151 | RDNA 4 iGPU (Radeon 8060S, Ryzen AI MAX) | `0.17.8-rc1-rocm` | ROCm 7.x required — see below |
+| gfx1105 | RDNA 3 iGPU (Radeon 780M, 760M) | `0.17.8-rc1-rocm` | ROCm 7.x required — see below |
 
-Works with well-supported AMD GPUs:
+## gfx1151 / gfx1105 — ROCm 7.x Setup
 
-| Architecture | GPUs | Status |
-|-------------|------|--------|
-| gfx1030 | RDNA 2 (RX 6000 series) | Supported |
-| gfx1100 | RDNA 3 (RX 7900 series) | Supported |
-| gfx1101 | RDNA 3 (RX 7800/7700) | Supported |
-| gfx1102 | RDNA 3 (RX 7600) | Supported |
+The stable `ollama:rocm` tag ships ROCm 6.x, which does not support gfx1151 (RDNA 4) and crashes on load.
+The installer auto-detects gfx1151 and pins `OLLAMA_IMAGE_TAG` to a ROCm 7.x build.
 
-Uses the `ollama/ollama:rocm` Docker image. Some GPUs may require `HSA_OVERRIDE_GFX_VERSION` to map to a supported architecture.
+**After installation, set `num_gpu: 99` globally** to bypass Ollama's conservative iGPU memory
+heuristic (which otherwise offloads only 1/49 layers to the GPU).
 
-### Vulkan (recommended for gfx1151 / gfx1105)
+**Option A — Open WebUI (recommended):** applies to all models including newly pulled ones.
 
-The official `ollama:rocm` image lacks working HIP kernels for some GPUs. The Vulkan backend bypasses HIP entirely and works reliably on these GPUs.
+> Admin Panel → Settings → Models → Default Model Settings → Advanced Parameters → `num_gpu: 99`
 
-| Architecture | GPUs | Status |
-|-------------|------|--------|
-| gfx1151 | RDNA 3.5 (Radeon 8060S, Ryzen AI MAX+ 395) | Vulkan recommended |
-| gfx1105 | RDNA 3 iGPU (Ryzen 7840U/7940HS, 780M/760M) | Vulkan recommended |
+**Option B — Ollama Modelfile:** required when using Ollama CLI or API directly without Open WebUI.
+Repeat for each model:
 
-Vulkan is actually **faster** than HIP on gfx1151 for prompt processing (~881 vs ~348 tok/s on 7B Q4_0 models). Token generation performance is comparable (~60 tok/s).
+```bash
+docker exec ollama sh -c "
+  ollama show <model> --modelfile > /tmp/mf.txt
+  echo 'PARAMETER num_gpu 99' >> /tmp/mf.txt
+  ollama create <model> -f /tmp/mf.txt
+"
+```
+
+Replace `<model>` with the model name as shown in `ollama list` (e.g. `llama3.2:latest`).
+
+**When to update `OLLAMA_IMAGE_TAG` back to `rocm`:** Once the stable `ollama:rocm` tag ships
+ROCm 7.x, update `.env`:
+
+```bash
+OLLAMA_IMAGE_TAG="rocm"
+```
+
+Then run `docker compose up -d --force-recreate ollama`.
 
 ## Configuration
 
-### ROCm/HIP mode
-
-Add to `.env`:
-
-```bash
-# Optional: architecture override for unsupported GPUs
-HSA_OVERRIDE_GFX_VERSION=11.0.0
-```
-
-### Vulkan mode (gfx1151 / gfx1105)
-
-Add to `.env`:
-
-```bash
-# Switch to standard image (Vulkan does not need ROCm libraries)
-OLLAMA_IMAGE_TAG=latest
-# Enable Vulkan compute backend
-OLLAMA_VULKAN=1
-# Disable HIP to prevent runner crashes
-HIP_VISIBLE_DEVICES=-1
-```
-
-### All variables
+All variables are auto-detected by the installer. Manual overrides via `.env`:
 
 | Variable | Default | Description |
-|----------|---------|-------------|
-| `OLLAMA_IMAGE_TAG` | `rocm` | Docker image tag (`rocm` for HIP, `latest` for Vulkan) |
-| `HSA_OVERRIDE_GFX_VERSION` | *(empty)* | ROCm architecture override (e.g. `11.0.0`) |
-| `OLLAMA_VULKAN` | *(empty)* | Set to `1` to enable Vulkan backend |
-| `HIP_VISIBLE_DEVICES` | *(empty)* | Set to `-1` to disable HIP (required for Vulkan on gfx1151) |
-| `OLLAMA_FLASH_ATTENTION` | *(empty)* | Set to `false` to disable flash attention if needed |
+|---|---|---|
+| `OLLAMA_IMAGE_TAG` | `rocm` | Image tag — `0.17.8-rc1-rocm` for gfx1151 |
+| `HIP_VISIBLE_DEVICES` | *(empty)* | `0` to enable GPU, `-1` to disable |
+| `HSA_OVERRIDE_GFX_VERSION` | *(empty)* | ROCm arch override (e.g. `11.0.0`) |
+| `OLLAMA_FLASH_ATTENTION` | *(empty)* | `true` to enable flash attention |
 
 ## Identifying your GPU
 
 ```bash
-# On the host (requires rocminfo)
-rocminfo | grep gfx
-
-# Or via lspci
-lspci | grep -i vga
+cat /sys/class/kfd/kfd/topology/nodes/1/properties | grep gfx_target_version
 ```
 
-## Known issues
-
-- **gfx1151 / gfx1105 + HIP**: Runner crashes or GPU not detected regardless of `HSA_OVERRIDE_GFX_VERSION` value. Use Vulkan mode instead (auto-detected by installer).
-- **gfx1151 + ROCm 7.x**: Flash attention may cause bootstrap discovery failures. Set `OLLAMA_FLASH_ATTENTION=false` if using a custom ROCm image.
+Format: `MMPPP` → e.g. `110501` = gfx1151 (RDNA 4)
 
 ## Disable
 

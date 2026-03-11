@@ -62,14 +62,21 @@ write_rocm_gpu_env() {
     # gfx_target_version format: MMPPP (e.g. 110501 = gfx1151, 110000 = gfx1100)
     case "$gfx_version" in
         110501|1151|110500|1105)
-            # gfx1151 (RDNA 3.5 / Strix Halo) or gfx1105 (RDNA 3 iGPU) — HIP not working, use Vulkan
-            print_info "GPU: gfx${gfx_version} detected — using Vulkan backend"
+            # gfx1151 (RDNA 4 / Strix Halo) or gfx1105 (RDNA 3 iGPU)
+            # ROCm 7.x supports gfx1151 natively. The stable ollama:rocm tag ships ROCm 6.x which crashes.
+            # Pin to a ROCm 7.x image until the stable tag catches up.
+            # IMPORTANT: after pulling models, patch each modelfile with PARAMETER num_gpu 99
+            # See: modules/gpu-rocm/README.md
+            print_info "GPU: gfx${gfx_version} (RDNA 4 iGPU) detected — using ROCm 7.x backend"
             cat >> "$PROJECT_ROOT/.env" << 'GPUEOF'
 
-# Ollama GPU (auto-detected: Vulkan mode — HIP not supported for this GPU)
-OLLAMA_IMAGE_TAG="latest"
-OLLAMA_VULKAN="1"
-HIP_VISIBLE_DEVICES="-1"
+# Ollama GPU (auto-detected: gfx1151 / RDNA 4 — ROCm 7.x mode)
+# Update OLLAMA_IMAGE_TAG to "rocm" once the stable tag ships ROCm 7.x
+# IMPORTANT: set num_gpu=99 in Open WebUI (Admin → Settings → Models → Default Model Settings)
+#            or patch each modelfile — see modules/gpu-rocm/README.md
+OLLAMA_IMAGE_TAG="0.17.8-rc1-rocm"
+HIP_VISIBLE_DEVICES="0"
+OLLAMA_FLASH_ATTENTION="true"
 GPUEOF
             ;;
         110000|110100|110200|1100|1101|1102)

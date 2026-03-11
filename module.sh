@@ -1343,11 +1343,14 @@ _detect_and_configure_rocm_gpu() {
 
     case "$gfx_version" in
         110501|1151|110500|1105)
-            # gfx1151 (RDNA 3.5) or gfx1105 (RDNA 3 iGPU) — HIP not working, use Vulkan
-            print_info "GPU: gfx${gfx_version} detected — using Vulkan backend"
-            update_env_var "OLLAMA_IMAGE_TAG" "latest"
-            update_env_var "OLLAMA_VULKAN" "1"
-            update_env_var "HIP_VISIBLE_DEVICES" "-1"
+            # gfx1151 (RDNA 4 / Strix Halo) or gfx1105 (RDNA 3 iGPU)
+            # ROCm 7.x supports gfx1151 natively — pin to ROCm 7.x image
+            # Update OLLAMA_IMAGE_TAG to "rocm" once the stable tag ships ROCm 7.x
+            print_info "GPU: gfx${gfx_version} (RDNA 4 iGPU) detected — using ROCm 7.x backend"
+            update_env_var "OLLAMA_IMAGE_TAG" "0.17.8-rc1-rocm"
+            update_env_var "OLLAMA_FLASH_ATTENTION" "true"
+            update_env_var "OLLAMA_VULKAN" ""
+            update_env_var "HIP_VISIBLE_DEVICES" "0"
             update_env_var "HSA_OVERRIDE_GFX_VERSION" ""
             ;;
         110000|110100|110200|1100|1101|1102)
